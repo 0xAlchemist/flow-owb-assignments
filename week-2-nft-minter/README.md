@@ -26,7 +26,7 @@ Deploy the onflow/NonFungibleToken.cdc contract to Account 1 (0x01cf0e2f2f715450
 
 Deploy the stones.cdc contract to Account 2 (0x179b6b1cb6755e31)
 
-Mint approximately 20 NFTs with Account 2 
+Mint approximately 20 NFTs with Account 2 using the mint_nft.cdc transaction
 - Manually click "submit transaction with account 0x179b6b1cb6755e31"
 - One NFT is minted with each click
 - Each transaction increases the block height (important for this example)
