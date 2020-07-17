@@ -34,14 +34,7 @@ Mint approximately 20 NFTs with Account 2
 
 Run the read_token_references.cdc script to see the NFT data
 
-# Minting Rocks
-
-## Rock Types
-
-1. Coal
-2. Jet
-3. Pyrite
-4. Diamond
+# Rock Types
 
 The setRockType method uses the current block height to
 select a value from a dictionary of rock types.
@@ -118,5 +111,50 @@ pub fun mintNFT(recipient: &{NonFungibleToken.CollectionPublic}) {
 
     // Update the total supply count
     Stones.totalSupply = Stones.totalSupply + UInt64(1)
+}
+```
+
+# Issues
+
+I'm having trouble reading the metaData or calling methods on the Stone NFT from
+the read_token_references.cdc script. It seems like I need to pass the &Stones.NFT 
+reference type instead of the &NonFungibleToken.NFT reference type... but then I'm
+not conforming to the CollectionPublic interface from the NFT standard (HAALP!!)
+
+```
+// This transaction loops through an array
+// of NFT ids, borrows a reference to the NFT
+// and logs it out
+
+import NonFungibleToken from 0x01cf0e2f2f715450
+import Stones from 0x179b6b1cb6755e31
+
+pub fun main() {
+    // Get the NFT holder's public account object
+    let acct = getAccount(0x179b6b1cb6755e31)
+    
+    // Borrow a reference to the NFT holder's public collection capability
+    let collectionRef = acct.getCapability(/public/StoneCollection)!.borrow<&{NonFungibleToken.CollectionPublic}>()
+                            ?? panic("Unable to borrow capability from public collection")
+
+    // Call the getIDs method to return an array of NFT IDs
+    let stones = collectionRef.getIDs()
+
+    // For each NFT id in the array...
+    for stone in stones {
+        // .. log the reference
+        log(collectionRef.borrowNFT(id: stone))
+
+        // NOTE: I'm having trouble figuring out
+        // how to read the NFT's metadata or call
+        // the getRockType() method. I gather it's
+        // because the reference is being passed
+        // as a &NonFungibleToken.NFT and not a
+        // &Stones.NFT
+        //
+        // I've left it as-is to conform to the NFT
+        // standard, but need to wrap my head around
+        // this :)
+    }
 }
 ```
