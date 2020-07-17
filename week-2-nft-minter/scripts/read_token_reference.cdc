@@ -25,8 +25,8 @@ pub fun main() {
         // how to read the NFT's metadata or call
         // the getRockType() method. I gather it's
         // because the reference is being passed
-        // as a @NonFungibleToken.NFT and not a
-        // @Stones.NFT
+        // as a &NonFungibleToken.NFT and not a
+        // &Stones.NFT
         //
         // I've left it as-is to conform to the NFT
         // standard, but need to wrap my head around
