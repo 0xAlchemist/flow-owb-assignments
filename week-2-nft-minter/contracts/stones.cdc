@@ -131,15 +131,17 @@ pub contract Stones: NonFungibleToken {
             // Set the initial rock type to 1 - most common
             var rockType = rockTypes[1]
 
+            // Set the rarity for each rock type based on current block height
             let rarityRules = [
                 [5,  2], // Every 5th block, mint jet
                 [10, 3], // Every 10th block, mint pyrite
                 [15, 4]  // Every 15th block, mint diamond
             ]
 
+            // For each rule in rarityRules...
             for rule in rarityRules {
-                let step = rule[0]
-                let type = rule[1]
+                let step = rule[0] // Get the step size
+                let type = rule[1] // Get the rock type
                 
                 // If the block height is divisible by step size...
                 if (blockHeight % UInt64(step) == UInt64(0)) {
