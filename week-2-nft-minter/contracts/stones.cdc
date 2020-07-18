@@ -50,7 +50,7 @@ pub contract Stones: NonFungibleToken {
 
         // getRockType returns the rock type as a string
         pub fun getRockType(): String {
-            return self.metaData["rockType"]
+            return self.metaData["type"]
                 ?? panic("Stone has no rock type!")
         }
     }
