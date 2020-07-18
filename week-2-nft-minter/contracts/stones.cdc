@@ -119,6 +119,7 @@ pub contract Stones: NonFungibleToken {
         // setRockType takes the block height as an agrument and
         // uses some simple math to pick a rock type for the asset.
         // The rock type is returned to the calling context as a string.
+        //
         access(self) fun setRockType(blockHeight: UInt64): String {
             let rockTypes = {
                 1: "coal",
@@ -130,22 +131,21 @@ pub contract Stones: NonFungibleToken {
             // Set the initial rock type to 1 - most common
             var rockType = rockTypes[1]
 
-            // If the block height is divisible by 5...
-            if (blockHeight % UInt64(5) == UInt64(0)) {
-                // .. change the rock type to '2' - uncommon
-                rockType = rockTypes[2]
-            }
-            
-            // If the block height is divisible by 10...
-            if (blockHeight % UInt64(10) == UInt64(0)) {
-                // .. change the rock type to '3' - rare
-                rockType = rockTypes[3]
-            }
-            
-            // If the block height is divisible by 15...
-            if (blockHeight % UInt64(15) == UInt64(0)) {
-                // .. change the rock type to '4' - rarest
-                rockType = rockTypes[4]
+            let rarityRules = [
+                [5,  2], // Every 5th block, mint jet
+                [10, 3], // Every 10th block, mint pyrite
+                [15, 4]  // Every 15th block, mint diamond
+            ]
+
+            for rule in rarityRules {
+                let step = rule[0]
+                let type = rule[1]
+                
+                // If the block height is divisible by step size...
+                if (blockHeight % UInt64(step) == UInt64(0)) {
+                    // .. change the rock type
+                    rockType = rockTypes[type]
+                }
             }
 
             // log the rock type to the console
