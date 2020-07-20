@@ -154,6 +154,12 @@ pub fun main() {
         // as a &NonFungibleToken.NFT and not a
         // &Stones.NFT
         //
+        // What I want:
+        // let stoneRef = collectionRef.borrowNFT(id: stone)
+        // let rockType = stoneRef.getRockType()
+        //
+        // log({stone: rockType})
+        //
         // I've left it as-is to conform to the NFT
         // standard, but need to wrap my head around
         // this :)
