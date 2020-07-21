@@ -189,20 +189,27 @@ pub contract Stones: NonFungibleToken {
         access(self) fun setRockType(blockHeight: UInt64): String {
             // Set the initial rock type to 1 - most common
             var rockType = Stones.rockTypes[1]
-
-            // Set the rarity for each rock type based on current block height
-            let rarityRules = [
-                [5,  2], // Every 5th block, mint jet
-                [10, 3], // Every 10th block, mint pyrite
-                [15, 4]  // Every 15th block, mint diamond
-            ]
+            
+            // Setup a multidimensional array to hold both the key
+            // multiplier used to determine the rock type's rarity
+            let rarityRules: [[Int]] = []
+            
+            // For each key in Stones.rockTypes...
+            for key in Stones.rockTypes.keys {
+                // ... if the key is greater than 1 ...
+                if key > 1 {
+                    // .. append the multiplier and key to
+                    // the rarityRules array as a new index
+                    rarityRules.append([key * 7, key])
+                }    
+            }
 
             // For each rule in rarityRules...
             for rule in rarityRules {
-                let step = rule[0] // Get the step size
+                let step = rule[0] // Get the multiplier
                 let type = rule[1] // Get the rock type
                 
-                // If the block height is divisible by step size...
+                // If the block height is divisible by the multiplier...
                 if (blockHeight % UInt64(step) == UInt64(0)) {
                     // .. change the rock type
                     rockType = Stones.rockTypes[type]
