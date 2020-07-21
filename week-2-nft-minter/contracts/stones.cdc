@@ -56,7 +56,7 @@ pub contract Stones: NonFungibleToken {
     }
 
     // PublicCollectionMethods is a custom interface that allows us to
-    // access the fields and methods for our Stones NFT
+    // access the public fields and methods for our Stones Collection
     pub resource interface PublicCollectionMethods {
         pub fun deposit(token: @NonFungibleToken.NFT)
         pub fun getIDs(): [UInt64]
