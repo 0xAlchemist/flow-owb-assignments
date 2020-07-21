@@ -55,9 +55,17 @@ pub contract Stones: NonFungibleToken {
         }
     }
 
+    // PublicCollectionMethods is a custom interface that allows us to
+    // access the fields and methods for our Stones NFT
+    pub resource interface PublicCollectionMethods {
+        pub fun deposit(token: @NonFungibleToken.NFT)
+        pub fun getIDs(): [UInt64]
+        pub fun borrowStone(id: UInt64): &Stones.NFT?
+    }
+
     // Collection is a resource that contains the stone NFTs and provides secure methods for the deposit,
     // withdrawal and management of the stones in the collection
-    pub resource Collection: NonFungibleToken.Provider, NonFungibleToken.Receiver, NonFungibleToken.CollectionPublic {
+    pub resource Collection: NonFungibleToken.Provider, NonFungibleToken.Receiver, NonFungibleToken.CollectionPublic, PublicCollectionMethods {
         // dictionary of NFT conforming tokens
         // NFT is a resource type with a 'UInt64' ID field
         pub var ownedNFTs: @{UInt64: NonFungibleToken.NFT}
@@ -99,6 +107,18 @@ pub contract Stones: NonFungibleToken {
         // so that the caller can read its metadata and call its methods
         pub fun borrowNFT(id: UInt64): &NonFungibleToken.NFT {
             return &self.ownedNFTs[id] as &NonFungibleToken.NFT
+        }
+
+        // borrowStone gets an authorized reference to and NFT in the collection
+        // and returns it to the caller as a reference to the Stones.NFT if it exists.
+        // The method returns nil if the provided token id doesn't exist in the collection
+        pub fun borrowStone(id: UInt64): &Stones.NFT? {
+            if self.ownedNFTs[id] != nil {
+                let stoneRef = &self.ownedNFTs[id] as auth &NonFungibleToken.NFT
+                return stoneRef as! &Stones.NFT
+            } else {
+                return nil
+            }
         }
 
         destroy() {
@@ -160,7 +180,7 @@ pub contract Stones: NonFungibleToken {
 
         // mintNFT mints a new NFT with a new ID and deposits it into the recipients 
         // Collection using their Collection reference
-        pub fun mintNFT(recipient: &{NonFungibleToken.CollectionPublic}) {
+        pub fun mintNFT(recipient: &{Stones.PublicCollectionMethods}) {
 
             // get the current block
             let currentBlock = getCurrentBlock()
@@ -188,7 +208,7 @@ pub contract Stones: NonFungibleToken {
         self.account.save(<-collection, to: /storage/StoneCollection)
 
         // create a public capability for the Collection
-        self.account.link<&{NonFungibleToken.CollectionPublic}>(
+        self.account.link<&{Stones.PublicCollectionMethods}>(
             /public/StoneCollection,
             target: /storage/StoneCollection
         )
