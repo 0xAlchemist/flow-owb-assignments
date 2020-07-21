@@ -34,6 +34,8 @@ Mint approximately 20 NFTs with Account 2 using the mint_nft.cdc transaction
 
 Run the read_token_references.cdc script to see a dictionary of Stone IDs and their rock type
 
+Run the get_rock_type_count.cdc script to see a dictionary of rock types with their total minted NFT counts
+
 # Rock Types
 
 The setRockType method uses the current block height to
@@ -43,37 +45,64 @@ That rock type is then returned to the calling context
 where it is used by the NFTMinter to create a new NFT
 
 ```
-// setRockType takes the block height as an agrument and
-// uses some simple math to pick a rock type for the asset.
-// The rock type is returned to the calling context as a string.
+// The rockTypes field declaration from the stones.cdc contract
 //
-access(self) fun setRockType(blockHeight: UInt64): String {
-    let rockTypes = {
+pub contract Stones: NonFungibleToken {
+
+    // totalSupply of Stones NFTs
+    pub var totalSupply: UInt64
+
+    // rockTypes metadata options for Stones NFTs
+    pub var rockTypes: {Int: String}
+
+...
+
+// The rockTypes values initialized when deploying stones.cdc
+//
+init() {
+    // initialize the totalSupply
+    self.totalSupply = 0
+
+    self.rockTypes = {
         1: "coal",
         2: "jet",
         3: "pyrite",
         4: "diamond"
     }
-    
-    // Set the initial rock type to 1 - most common
-    var rockType = rockTypes[1]
 
-    // Set the rarity for each rock type based on current block height
-    let rarityRules = [
-        [5,  2], // Every 5th block, mint jet
-        [10, 3], // Every 10th block, mint pyrite
-        [15, 4]  // Every 15th block, mint diamond
-    ]
+...
+
+// setRockType takes the block height as an agrument and
+// uses some simple math to pick a rock type for the asset.
+// The rock type is returned to the calling context as a string.
+//
+access(self) fun setRockType(blockHeight: UInt64): String {
+    // Set the initial rock type to 1 - most common
+    var rockType = Stones.rockTypes[1]
+    
+    // Setup a multidimensional array to hold both the key
+    // multiplier used to determine the rock type's rarity
+    let rarityRules: [[Int]] = []
+    
+    // For each key in Stones.rockTypes...
+    for key in Stones.rockTypes.keys {
+        // ... if the key is greater than 1 ...
+        if key > 1 {
+            // .. append the multiplier and key to
+            // the rarityRules array as a new index
+            rarityRules.append([key * 7, key])
+        }    
+    }
 
     // For each rule in rarityRules...
     for rule in rarityRules {
-        let step = rule[0] // Get the step size
+        let step = rule[0] // Get the multiplier
         let type = rule[1] // Get the rock type
         
-        // If the block height is divisible by step size...
+        // If the block height is divisible by the multiplier...
         if (blockHeight % UInt64(step) == UInt64(0)) {
             // .. change the rock type
-            rockType = rockTypes[type]
+            rockType = Stones.rockTypes[type]
         }
     }
 
