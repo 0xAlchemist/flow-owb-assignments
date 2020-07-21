@@ -13,22 +13,9 @@ pub fun main() {
     let collectionRef = acct.getCapability(/public/StoneCollection)!.borrow<&{Stones.PublicCollectionMethods}>()
                             ?? panic("Unable to borrow capability from public collection")
 
-    // Call the getRockTypes method on the collection reference to return 
+    // Call the getMintedRockTypes method on the collection reference to return 
     // a dictionary of NFT IDs and rock types
-    let stoneIDs = collectionRef.getIDs()
-
-    // for each id in the array...
-    for stoneID in stoneIDs {
-
-        // ... get the Stone NFT reference
-        let stoneRef = collectionRef.borrowStone(id: stoneID)
-            ?? panic("No stone at this ID")
-
-        // ... get the NFT rock type
-        let rockType = stoneRef.getRockType()
-
-        // ... log the Stone id and rock type as a dictionary for formatting
-        log({stoneID: rockType})
-    }
+    let mintedRockTypes = collectionRef.getMintedRockTypes()
+    log(mintedRockTypes)
 }
  
