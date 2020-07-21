@@ -10,32 +10,25 @@ pub fun main() {
     let acct = getAccount(0x179b6b1cb6755e31)
     
     // Borrow a reference to the NFT holder's public collection capability
-    let collectionRef = acct.getCapability(/public/StoneCollection)!.borrow<&{NonFungibleToken.CollectionPublic}>()
+    let collectionRef = acct.getCapability(/public/StoneCollection)!.borrow<&{Stones.PublicCollectionMethods}>()
                             ?? panic("Unable to borrow capability from public collection")
 
-    // Call the getIDs method to return an array of NFT IDs
-    let stones = collectionRef.getIDs()
+    // Call the getRockTypes method on the collection reference to return 
+    // a dictionary of NFT IDs and rock types
+    let stoneIDs = collectionRef.getIDs()
 
-    // For each NFT id in the array...
-    for stone in stones {
-        // .. log the reference
-        log(collectionRef.borrowNFT(id: stone))
+    // for each id in the array...
+    for stoneID in stoneIDs {
 
-        // NOTE: I'm having trouble figuring out
-        // how to read the NFT's metadata or call
-        // the getRockType() method. I gather it's
-        // because the reference is being passed
-        // as a &NonFungibleToken.NFT and not a
-        // &Stones.NFT
-        //
-        // What I want:
-        // let stoneRef = collectionRef.borrowNFT(id: stone)
-        // let rockType = stoneRef.getRockType()
-        //
-        // log({stone: rockType})
-        //
-        // I've left it as-is to conform to the NFT
-        // standard, but need to wrap my head around
-        // this :)
+        // ... get the Stone NFT reference
+        let stoneRef = collectionRef.borrowStone(id: stoneID)
+            ?? panic("No stone at this ID")
+
+        // ... get the NFT rock type
+        let rockType = stoneRef.getRockType()
+
+        // ... log the Stone id and rock type as a dictionary for formatting
+        log({stoneID: rockType})
     }
 }
+ 
