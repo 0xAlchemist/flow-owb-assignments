@@ -24,7 +24,7 @@ transaction {
         // Borrow the recipient's public NFT Collection reference
         let receiver = recipient
                         .getCapability(/public/StoneCollection)!
-                        .borrow<&{NonFungibleToken.CollectionPublic}>()
+                        .borrow<&{Stones.PublicCollectionMethods}>()
                         ?? panic("Could not borrow a reference to the Stone collection")
 
         // Mint the NFT and deposit it to the recipient's collection
