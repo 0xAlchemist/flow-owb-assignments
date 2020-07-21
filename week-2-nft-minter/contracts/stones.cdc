@@ -19,6 +19,9 @@ pub contract Stones: NonFungibleToken {
     // totalSupply of Stones NFTs
     pub var totalSupply: UInt64
 
+    // rockTypes metadata options for Stones NFTs
+    pub var rockTypes: {Int: String}
+
     // The event that emits when the contract has been initialized
     pub event ContractInitialized()
 
@@ -61,6 +64,10 @@ pub contract Stones: NonFungibleToken {
         pub fun deposit(token: @NonFungibleToken.NFT)
         pub fun getIDs(): [UInt64]
         pub fun borrowStone(id: UInt64): &Stones.NFT?
+        pub fun getRockTypeOptions(): [String]
+        pub fun getMintedRockTypes(): {UInt64: String}
+        pub fun getRockTypeCount(): {String: UInt64}
+        
     }
 
     // Collection is a resource that contains the stone NFTs and provides secure methods for the deposit,
@@ -121,6 +128,45 @@ pub contract Stones: NonFungibleToken {
             }
         }
 
+        pub fun getRockTypeOptions(): [String] {
+            return Stones.rockTypes.values
+        }
+
+        pub fun getMintedRockTypes(): {UInt64: String} {
+            let rockIDs = self.getIDs()
+            var mintedRockTypes: {UInt64: String} = {}
+
+            for id in rockIDs {
+                let rockRef = self.borrowStone(id: id)
+                    ?? panic("No stone available at this ID")
+
+                let rockType = rockRef.getRockType()
+
+                mintedRockTypes[id] = rockType
+            }
+
+            return mintedRockTypes
+        }
+
+        pub fun getRockTypeCount(): {String: UInt64} {
+            let rockTypeOptions = self.getRockTypeOptions()
+            let mintedRockTypes = self.getMintedRockTypes().values
+            
+            var rockTypeCount: {String: UInt64} = {}
+
+            for option in rockTypeOptions {
+                rockTypeCount[option] = UInt64(0)
+                
+                for rockType in mintedRockTypes {
+                    if option == rockType {
+                        rockTypeCount[option] = rockTypeCount[option]! + UInt64(1)
+                    }
+                }
+            }
+
+            return rockTypeCount
+        }
+
         destroy() {
             destroy self.ownedNFTs
         }
@@ -141,15 +187,8 @@ pub contract Stones: NonFungibleToken {
         // The rock type is returned to the calling context as a string.
         //
         access(self) fun setRockType(blockHeight: UInt64): String {
-            let rockTypes = {
-                1: "coal",
-                2: "jet",
-                3: "pyrite",
-                4: "diamond"
-            }
-            
             // Set the initial rock type to 1 - most common
-            var rockType = rockTypes[1]
+            var rockType = Stones.rockTypes[1]
 
             // Set the rarity for each rock type based on current block height
             let rarityRules = [
@@ -166,7 +205,7 @@ pub contract Stones: NonFungibleToken {
                 // If the block height is divisible by step size...
                 if (blockHeight % UInt64(step) == UInt64(0)) {
                     // .. change the rock type
-                    rockType = rockTypes[type]
+                    rockType = Stones.rockTypes[type]
                 }
             }
 
@@ -202,6 +241,13 @@ pub contract Stones: NonFungibleToken {
     init() {
         // initialize the totalSupply
         self.totalSupply = 0
+
+        self.rockTypes = {
+            1: "coal",
+            2: "jet",
+            3: "pyrite",
+            4: "diamond"
+        }
 
         // create a Collection resource and save it to storage
         let collection <- create Collection()
