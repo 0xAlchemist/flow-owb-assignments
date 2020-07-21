@@ -22,23 +22,23 @@ Clone the git repo:
 Open the project folder:
 ```code ./flow-owb-assignments/week-2-nft-minter```
 
-Deploy the onflow/NonFungibleToken.cdc contract to Account 1 (0x01cf0e2f2f715450)
+Deploy the `onflow/NonFungibleToken.cdc` contract to `Account 1 (0x01cf0e2f2f715450)`
 
-Deploy the stones.cdc contract to Account 2 (0x179b6b1cb6755e31)
+Deploy the `stones.cdc` contract to `Account 2 (0x179b6b1cb6755e31)`
 
-Mint approximately 20 NFTs with Account 2 using the mint_nft.cdc transaction
-- Manually click "submit transaction with account 0x179b6b1cb6755e31"
+Mint approximately 20 NFTs with `Account 2` using the `mint_nft.cdc` transaction
+- Manually click "`submit transaction with account 0x179b6b1cb6755e31`"
 - One NFT is minted with each click
 - Each transaction increases the block height (important for this example)
 - Check the console to see the token types being minted
 
-Run the read_token_references.cdc script to see a dictionary of Stone IDs and their rock type
+Run the `read_token_references.cdc` script to see a dictionary of Stone IDs and their rock type
 
-Run the get_rock_type_count.cdc script to see a dictionary of rock types with their total minted NFT counts
+Run the `get_rock_type_count.cdc` script to see a dictionary of rock types with their total minted NFT counts
 
 # Rock Types
 
-The setRockType method uses the current block height to
+The `setRockType` method uses the current block height to
 select a value from a dictionary of rock types.
 
 That rock type is then returned to the calling context
@@ -117,8 +117,8 @@ access(self) fun setRockType(blockHeight: UInt64): String {
 
 ## Minting Method
 
-The mintNFT method creates a new NFT with the rock type
-returned from setRockType.
+The `mintNFT` method creates a new NFT with the rock type
+returned from `setRockType`.
 
 That new NFT is deposited into the recipient's collection
 and the total supply is increased
