@@ -200,7 +200,7 @@ pub contract Stones: NonFungibleToken {
                 if key > 1 {
                     // .. append the multiplier and key to
                     // the rarityRules array as a new index
-                    rarityRules.append([key * 7, key])
+                    rarityRules.append([(key * key) * 2, key])
                 }    
             }
 
