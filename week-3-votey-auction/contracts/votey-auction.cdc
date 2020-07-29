@@ -76,6 +76,18 @@ pub contract VoteyAuction {
         // The minimum bid increment
         pub var minimumBid: UFix64
 
+        // The block number at the start of the auction
+        pub var auctionStartBlock: UInt64
+
+        // The last block number the updateAuction function was executed on
+        pub var lastCheckedBlock: UInt64
+
+        // The length of an auction in blocks
+        pub var auctionLengthInBlocks: UInt64
+
+        // The amount of blocks remaining in the current auction
+        pub var blocksRemainingInAuction: UInt64
+
         // The FungibleToken Receiver for the current recipient
         // - used to return the balance from the bidVault if the price is outbid
         pub var recipientFTReceiverRef: &AnyResource{FungibleToken.Receiver}
@@ -102,7 +114,7 @@ pub contract VoteyAuction {
         access(account) let ownerVault: &AnyResource{FungibleToken.Receiver}
 
         // Vault that holds the tokens for the current bid
-        access(contract) var bidVault: @FungibleToken.Vault
+        access(contract) let bidVault: @FungibleToken.Vault
 
         init(
             ownerVault: &AnyResource{FungibleToken.Receiver},
@@ -114,6 +126,10 @@ pub contract VoteyAuction {
             self.currentAuctionItem <- []
             self.currentPrice = UFix64(0)
             self.minimumBid = UFix64(0.05)
+            self.auctionStartBlock = UInt64(0)
+            self.lastCheckedBlock = self.auctionStartBlock
+            self.auctionLengthInBlocks = UInt64(3600)
+            self.blocksRemainingInAuction = self.auctionLengthInBlocks
             self.recipientFTReceiverRef = tempFTVault
             self.recipientNFTReceiverRef = tempNFTVault
             self.auctionQueue <- {}
@@ -198,11 +214,107 @@ pub contract VoteyAuction {
             return self.auctionQueueVotes
         }
 
+        pub fun getHighestVoteID(): UInt64? {
+            var tokenID: UInt64? = nil
+            var highestCount: UInt64 = 0
+            
+            var counter: UInt64 = 0
+
+            while counter < UInt64(self.auctionQueueVotes.keys.length) {
+                if self.auctionQueueVotes[counter]! > highestCount {
+                    highestCount = self.auctionQueueVotes[counter]
+                                        ?? panic("auction queue is out of sync...")
+                    tokenID = self.auctionQueueVotes.keys[counter]
+                }
+            }
+
+            return tokenID
+        }
+
+        pub fun getLowestQueuedTokenID(): UInt64 {
+            var lowestID: UInt64 = self.auctionQueue.keys[0]
+            
+            for id in self.auctionQueue.keys {
+                if id < lowestID {
+                    lowestID = id
+                }
+            }
+
+            return lowestID
+        }
+
+        pub fun getNextTokenID(): UInt64 {
+            let highestVotes = self.getHighestVoteID()
+            let lowestTokenID = self.getLowestQueuedTokenID()
+            var nextTokenID: UInt64 = 0
+
+            if highestVotes != nil {
+                nextTokenID = highestVotes!
+            } else {
+                nextTokenID = lowestTokenID
+            }
+
+            return nextTokenID
+        }
+
+        pub fun startAuction(auctionID: UInt64) {
+            let currentBlock = getCurrentBlock()
+
+            self.auctionStartBlock = currentBlock.height
+
+            VoteyAuction.activeAuctions[auctionID] = true
+
+            while VoteyAuction.activeAuctions[auctionID] == true {
+
+                self.updateAuction(currentBlockHeight: currentBlock.height)
+                
+            }
+        }
+
+        pub fun updateAuction(currentBlockHeight: UInt64) {
+            
+            if currentBlockHeight != self.lastCheckedBlock {
+                // set the remaining block count
+                self.blocksRemainingInAuction = (self.auctionStartBlock + self.auctionLengthInBlocks) - currentBlockHeight
+
+                if self.blocksRemainingInAuction == UInt64(0) {
+                    
+                    self.settleAuction()
+
+                }
+
+            }
+            
+            self.lastCheckedBlock = currentBlockHeight
+        }
+
+        pub fun settleAuction() {
+            
+            let nextTokenID = self.getNextTokenID()
+            
+            let purchasedNFT <- self.currentAuctionItem[0] <- self.auctionQueue.remove(key: nextTokenID)!
+
+            // send the NFT to the highest bidder
+            self.recipientNFTReceiverRef.deposit(token: <-purchasedNFT)
+
+            // send the bid tokens to the NFT seller
+            let bidBalance <- self.bidVault.withdraw(amount: self.bidVault.balance)
+            self.recipientFTReceiverRef.deposit(from: <-bidBalance)
+
+        }
+
+        pub fun endAuction(auctionID: UInt64) {
+            VoteyAuction.activeAuctions[auctionID] = false
+        }
+
         // withdrawTokenFromQueue gives the owner the opportunity to remove a sale from the auction queue
         // BEFORE the token is up for auction
         pub fun withdrawTokenFromQueue(tokenID: UInt64): @NonFungibleToken.NFT {
             // remove the price
             self.auctionQueuePrices.remove(key: tokenID)
+
+            // remove the votes
+            self.auctionQueueVotes.remove(key: tokenID)
 
             //remove and return the token
             let token <- self.auctionQueue.remove(key: tokenID) ?? panic("Missing NFT")
@@ -277,8 +389,6 @@ pub contract VoteyAuction {
             tempFTVault: tempFTReceiverRef, 
             tempNFTVault: tempNFTReceiverRef
         )
-        
-        self.activeAuctions[auctionCollection.id] = true
 
         return <- auctionCollection
     }
