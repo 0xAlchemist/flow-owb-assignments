@@ -175,10 +175,13 @@ pub contract VoteyAuction {
             emit AuctionPriceChanged(id: self.currentAuctionItem[0].id, newPrice: bidAmount)
         }
 
+        // issueBallot returns a new AuctionBallot resource to the calling context
         pub fun issueBallot(): @AuctionBallot {
             
+            // create the new AuctionBallot
             let ballot <- create AuctionBallot(auctionRef: &self as &AuctionCollection)
-
+            
+            // add the AuctionBallot id to the auctionBallots dictionary with a nil value
             self.auctionBallots[ballot.id] = nil
             
             emit NewBallotIssued(auctionCollectionID: self.id, ballotID: ballot.id)
@@ -186,12 +189,20 @@ pub contract VoteyAuction {
             return <- ballot
         }
 
+        // castVote casts a vote using the provided AuctionBallot, sets the auctionBallots
+        // key to the selected value and then destroys the used AuctionBallot resource
         pub fun castVote(ballot: @AuctionBallot, tokenID: UInt64) {
-
+            
+            // vote for the provided tokenID
             ballot.vote(tokenID: tokenID)
 
+            // update the vote count for the token in the auctionQueueVotes dictionary
             self.auctionQueueVotes[tokenID] = self.auctionQueueVotes[tokenID]! + UInt64(1)
 
+            // record the vote selection in the auctionBallots dictionary
+            self.auctionBallots[ballot.id] = tokenID
+
+            // destroy the AuctionBallot
             destroy ballot
         }
 
@@ -210,10 +221,13 @@ pub contract VoteyAuction {
             return self.auctionQueue.keys
         }
 
+        // getQueueVotes returns the auctionQueueVotes dictionary
         pub fun getQueueVotes(): {UInt64: UInt64} {
             return self.auctionQueueVotes
         }
 
+        // getHighestVoteID returns the tokenID with the highest vote count
+        // or nil if there are no recorded votes
         pub fun getHighestVoteID(): UInt64? {
             var tokenID: UInt64? = nil
             var highestCount: UInt64 = 0
@@ -231,6 +245,8 @@ pub contract VoteyAuction {
             return tokenID
         }
 
+        // getLowestQueuedTokenID returns the lowest ID value
+        // in the auctionQueue
         pub fun getLowestQueuedTokenID(): UInt64 {
             var lowestID: UInt64 = self.auctionQueue.keys[0]
             
@@ -243,6 +259,7 @@ pub contract VoteyAuction {
             return lowestID
         }
 
+        // getNextTokenID returns the ID of the next token available for auction
         pub fun getNextTokenID(): UInt64 {
             let highestVotes = self.getHighestVoteID()
             let lowestTokenID = self.getLowestQueuedTokenID()
@@ -257,15 +274,22 @@ pub contract VoteyAuction {
             return nextTokenID
         }
 
+        // startAuction starts the auction
         pub fun startAuction(auctionID: UInt64) {
+            
+            // get the current Block data
             let currentBlock = getCurrentBlock()
 
+            // set the auction start block to the current block height
             self.auctionStartBlock = currentBlock.height
 
+            // set the current auction to 'active'
             VoteyAuction.activeAuctions[auctionID] = true
 
+            // while the current auction is 'active'...
             while VoteyAuction.activeAuctions[auctionID] == true {
-
+                
+                // ... update the auction data
                 self.updateAuction(currentBlockHeight: currentBlock.height)
                 
             }
@@ -274,18 +298,21 @@ pub contract VoteyAuction {
         // updateAuction updates the auction state every time it receives a new block count
         pub fun updateAuction(currentBlockHeight: UInt64) {
             
+            // if the current block was not already checked
             if currentBlockHeight != self.lastCheckedBlock {
-                // set the remaining block count
+                // ... set the remaining block count
                 self.blocksRemainingInAuction = (self.auctionStartBlock + self.auctionLengthInBlocks) - currentBlockHeight
 
+                // if there are no more blocks remaining in the auction...
                 if self.blocksRemainingInAuction == UInt64(0) {
-                    
+                    // ... settle the auction
                     self.settleAuction()
 
                 }
 
             }
             
+            // update the last checked block to the current block height
             self.lastCheckedBlock = currentBlockHeight
         }
 
@@ -323,6 +350,7 @@ pub contract VoteyAuction {
 
         }
 
+        // endAuction deactivates the auction and stops the updateAuction loop
         pub fun endAuction(auctionID: UInt64) {
             VoteyAuction.activeAuctions[auctionID] = false
         }
