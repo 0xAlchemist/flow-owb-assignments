@@ -226,9 +226,9 @@ pub contract VoteyAuction {
             return self.auctionQueueVotes
         }
 
-        // getHighestVoteID returns the tokenID with the highest vote count
+        // getHighestVoteTokenID returns the tokenID with the highest vote count
         // or nil if there are no recorded votes
-        pub fun getHighestVoteID(): UInt64? {
+        pub fun getHighestVoteTokenID(): UInt64? {
             var tokenID: UInt64? = nil
             var highestCount: UInt64 = 0
             
@@ -261,7 +261,7 @@ pub contract VoteyAuction {
 
         // getNextTokenID returns the ID of the next token available for auction
         pub fun getNextTokenID(): UInt64 {
-            let highestVotes = self.getHighestVoteID()
+            let highestVotes = self.getHighestVoteTokenID()
             let lowestTokenID = self.getLowestQueuedTokenID()
             var nextTokenID: UInt64 = 0
 
