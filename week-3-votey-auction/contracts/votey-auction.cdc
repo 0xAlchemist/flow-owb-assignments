@@ -271,6 +271,7 @@ pub contract VoteyAuction {
             }
         }
 
+        // updateAuction updates the auction state every time it receives a new block count
         pub fun updateAuction(currentBlockHeight: UInt64) {
             
             if currentBlockHeight != self.lastCheckedBlock {
@@ -289,13 +290,32 @@ pub contract VoteyAuction {
         }
 
         pub fun settleAuction() {
-            
-            let nextTokenID = self.getNextTokenID()
-            
-            let purchasedNFT <- self.currentAuctionItem[0] <- self.auctionQueue.remove(key: nextTokenID)!
 
-            // send the NFT to the highest bidder
-            self.recipientNFTReceiverRef.deposit(token: <-purchasedNFT)
+            // if there are more NFTs in the auction queue...
+            if self.auctionQueue.keys.length > 0 {
+                
+                // get the next token ID
+                let nextTokenID = self.getNextTokenID()
+                
+                // get the completed auction item and replace it with the next token from the queue
+                let purchasedNFT <- self.currentAuctionItem[0] <- self.auctionQueue.remove(key: nextTokenID)!
+
+                // send the completed auction item to the highest bidder
+                self.recipientNFTReceiverRef.deposit(token: <-purchasedNFT)
+
+                // set the start block for the new auction to the current block
+                self.auctionStartBlock = getCurrentBlock().height
+
+                // reset the auction's remaining block count
+                self.blocksRemainingInAuction = self.auctionLengthInBlocks
+
+            } else {
+
+                // send the NFT to the highest bidder
+                let purchasedNFT <- self.currentAuctionItem.remove(at: 0)
+                self.recipientNFTReceiverRef.deposit(token: <-purchasedNFT)
+                
+            }
 
             // send the bid tokens to the NFT seller
             let bidBalance <- self.bidVault.withdraw(amount: self.bidVault.balance)
@@ -352,12 +372,19 @@ pub contract VoteyAuction {
         }
     }
 
+    // An AuctionBallot is minted to each bidder. They are used to
+    // cast votes for the next available NFT from the auction queue.
+    // The NFT with the highest vote count will be next up for auction.
     pub resource AuctionBallot {
 
+         // an ID used to track the ballot
          pub let id: UInt64
          
+         // a reference to the AuctionCollections the Ballot belongs to
          pub let auctionRef: &AuctionCollection
 
+         // a dictionary containing token IDs from the AuctionCollection's
+         // auctionQueue and a boolean value to track the selection
          pub var selection: {UInt64: Bool}
     
          init(auctionRef: &AuctionCollection) {
@@ -366,6 +393,8 @@ pub contract VoteyAuction {
             self.selection = {}
          }
 
+         // vote allows the ballot holder to make a selection 
+         // from the auctionQueue
          pub fun vote(tokenID: UInt64) {
             pre {
                 self.auctionRef.auctionQueue[tokenID] != nil:
