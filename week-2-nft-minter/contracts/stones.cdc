@@ -216,10 +216,6 @@ pub contract Stones: NonFungibleToken {
                 }
             }
 
-            // log the rock type to the console
-            log("New stone minted:")
-            log(rockType)
-
             return rockType 
                 ?? panic("Unable to return a rock type!")
         }
