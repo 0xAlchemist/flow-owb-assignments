@@ -51,6 +51,8 @@ pub contract VoteyAuction {
             recipientNFTReceiverRef: &AnyResource{NonFungibleToken.Receiver},
             recipientFTReceiverRef: &AnyResource{FungibleToken.Receiver}
         )
+        pub fun issueBallot(): @AuctionBallot
+        pub fun castVote(ballot: @AuctionBallot, tokenID: UInt64)
         pub fun queueIDPrice(tokenID: UInt64): UFix64?
         pub fun queueIDVotes(tokenID: UInt64): UInt64?
         pub fun getQueueIDs(): [UInt64]
@@ -65,48 +67,48 @@ pub contract VoteyAuction {
     pub resource AuctionCollection: AuctionPublic {
 
         // The Auction collection ID
-        pub var id: UInt64
+        access(contract) var id: UInt64
 
         // Dictionary of the NFTs that the user is putting up for sale
-        pub var currentAuctionItem: @[NonFungibleToken.NFT]
+        access(contract) var currentAuctionItem: @[NonFungibleToken.NFT]
 
         // The price of the current NFT
-        pub var currentPrice: UFix64
+        access(contract) var currentPrice: UFix64
 
         // The minimum bid increment
-        pub var minimumBid: UFix64
+        access(contract) var minimumBid: UFix64
 
         // The block number at the start of the auction
-        pub var auctionStartBlock: UInt64
+        access(contract) var auctionStartBlock: UInt64
 
         // The last block number the updateAuction function was executed on
-        pub var lastCheckedBlock: UInt64
+        access(contract) var lastCheckedBlock: UInt64
 
         // The length of an auction in blocks
-        pub var auctionLengthInBlocks: UInt64
+        access(contract) var auctionLengthInBlocks: UInt64
 
         // The amount of blocks remaining in the current auction
-        pub var blocksRemainingInAuction: UInt64
+        access(contract) var blocksRemainingInAuction: UInt64
 
         // The FungibleToken Receiver for the current recipient
         // - used to return the balance from the bidVault if the price is outbid
-        pub var recipientFTReceiverRef: &AnyResource{FungibleToken.Receiver}
+        access(contract) var recipientFTReceiverRef: &AnyResource{FungibleToken.Receiver}
 
         // The NFT Receiver for the current recipient
         // - used to deposit the NFT to the auction winner
-        pub var recipientNFTReceiverRef: &AnyResource{NonFungibleToken.Receiver}
+        access(contract) var recipientNFTReceiverRef: &AnyResource{NonFungibleToken.Receiver}
 
         // Dictionairy of NFTs coming up for auction
-        pub var auctionQueue: @{UInt64: NonFungibleToken.NFT}
+        access(contract) var auctionQueue: @{UInt64: NonFungibleToken.NFT}
         
         // Dictionary of prices for each NFT in the auction queue by ID
-        pub var auctionQueuePrices: {UInt64: UFix64}
+        access(contract) var auctionQueuePrices: {UInt64: UFix64}
 
         // Dictionary of votes for each NFT in the auction queue by ID
-        pub var auctionQueueVotes: {UInt64: UInt64}
+        access(contract) var auctionQueueVotes: {UInt64: UInt64}
 
         // Dictionary of active AuctionBallot IDs and their selected token
-        pub var auctionBallots: {UInt64: UInt64}
+        access(contract) var auctionBallots: {UInt64: UInt64}
 
         // The fungible token vault of the owner of this sale.
         // When someone buys a token, this resource can deposit
@@ -236,7 +238,7 @@ pub contract VoteyAuction {
 
             while counter < UInt64(self.auctionQueueVotes.keys.length) {
                 if self.auctionQueueVotes[counter]! > highestCount {
-                    highestCount = self.auctionQueueVotes[counter]
+                    highestCount = self.auctionQueueVotes[self.auctionQueueVotes.keys[counter]]
                                         ?? panic("auction queue is out of sync...")
                     tokenID = self.auctionQueueVotes.keys[counter]
                 }
@@ -274,8 +276,15 @@ pub contract VoteyAuction {
             return nextTokenID
         }
 
+        // resetQueueVotes resets the auctionQueue vote data
+        access(contract) fun resetQueueVotes() {
+            for token in self.auctionQueueVotes.keys {
+                self.auctionQueueVotes[token] = 0
+            }
+        }
+
         // startAuction starts the auction
-        pub fun startAuction(auctionID: UInt64) {
+        pub fun startAuction() {
             
             // get the current Block data
             let currentBlock = getCurrentBlock()
@@ -284,10 +293,10 @@ pub contract VoteyAuction {
             self.auctionStartBlock = currentBlock.height
 
             // set the current auction to 'active'
-            VoteyAuction.activeAuctions[auctionID] = true
+            VoteyAuction.activeAuctions[self.id] = true
 
             // while the current auction is 'active'...
-            while VoteyAuction.activeAuctions[auctionID] == true {
+            while VoteyAuction.activeAuctions[self.id] == true {
                 
                 // ... update the auction data
                 self.updateAuction(currentBlockHeight: currentBlock.height)
@@ -296,7 +305,7 @@ pub contract VoteyAuction {
         }
 
         // updateAuction updates the auction state every time it receives a new block count
-        pub fun updateAuction(currentBlockHeight: UInt64) {
+        access(contract) fun updateAuction(currentBlockHeight: UInt64) {
             
             // if the current block was not already checked
             if currentBlockHeight != self.lastCheckedBlock {
@@ -316,7 +325,7 @@ pub contract VoteyAuction {
             self.lastCheckedBlock = currentBlockHeight
         }
 
-        pub fun settleAuction() {
+        access(contract) fun settleAuction() {
 
             // if there are more NFTs in the auction queue...
             if self.auctionQueue.keys.length > 0 {
@@ -326,6 +335,15 @@ pub contract VoteyAuction {
                 
                 // get the completed auction item and replace it with the next token from the queue
                 let purchasedNFT <- self.currentAuctionItem[0] <- self.auctionQueue.remove(key: nextTokenID)!
+
+                self.currentPrice = self.auctionQueuePrices[nextTokenID]
+                                        ?? panic("can't find token in auction queue prices array")
+
+                // remove next token from auctionQueueVotes dictionary
+                self.auctionQueueVotes.remove(key: nextTokenID)
+
+                // remove next token from auctionQueuePrices dictionary
+                self.auctionQueuePrices.remove(key: nextTokenID)
 
                 // send the completed auction item to the highest bidder
                 self.recipientNFTReceiverRef.deposit(token: <-purchasedNFT)
@@ -341,8 +359,12 @@ pub contract VoteyAuction {
                 // send the NFT to the highest bidder
                 let purchasedNFT <- self.currentAuctionItem.remove(at: 0)
                 self.recipientNFTReceiverRef.deposit(token: <-purchasedNFT)
+
+                self.endAuction(auctionID: self.id)
                 
             }
+
+            self.resetQueueVotes()
 
             // send the bid tokens to the NFT seller
             let bidBalance <- self.bidVault.withdraw(amount: self.bidVault.balance)
@@ -351,7 +373,7 @@ pub contract VoteyAuction {
         }
 
         // endAuction deactivates the auction and stops the updateAuction loop
-        pub fun endAuction(auctionID: UInt64) {
+        access(contract) fun endAuction(auctionID: UInt64) {
             VoteyAuction.activeAuctions[auctionID] = false
         }
 
@@ -386,7 +408,8 @@ pub contract VoteyAuction {
             emit TokenAddedToAuctionQueue(id: id, price: startPrice)
         }
 
-        // changePrice changes the price of a token that is currently for sale
+        // changeStartPrice changes the start price of a token that is currently 
+        // in the auction queue
         pub fun changeStartPrice(tokenID: UInt64, newPrice: UFix64) {
             self.auctionQueuePrices[tokenID] = newPrice
 
