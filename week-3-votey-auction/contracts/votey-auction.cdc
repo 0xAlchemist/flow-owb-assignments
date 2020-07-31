@@ -360,7 +360,7 @@ pub contract VoteyAuction {
                 let purchasedNFT <- self.currentAuctionItem.remove(at: 0)
                 self.recipientNFTReceiverRef.deposit(token: <-purchasedNFT)
 
-                self.endAuction(auctionID: self.id)
+                self.endAuction()
                 
             }
 
@@ -373,8 +373,8 @@ pub contract VoteyAuction {
         }
 
         // endAuction deactivates the auction and stops the updateAuction loop
-        access(contract) fun endAuction(auctionID: UInt64) {
-            VoteyAuction.activeAuctions[auctionID] = false
+        access(contract) fun endAuction() {
+            VoteyAuction.activeAuctions[self.id] = false
         }
 
         // withdrawTokenFromQueue gives the owner the opportunity to remove a sale from the auction queue
