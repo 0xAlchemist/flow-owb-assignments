@@ -1,8 +1,8 @@
 // This transaction adds an empty Vault to Account 2
-// and mints an NFT with id=1 that is deposited into
+// and mints new NFTs which are deposited into
 // the NFT collection on Account 1.
 
-// Signer: Account 2 - 0xf3fcd2c1a78f5eee
+// Signer: Account 2 - 0x179b6b1cb6755e31
 
 import FungibleToken from 0xee82856bf20e2aa6
 import NonFungibleToken from 0xe03daebed8ca0615
@@ -12,7 +12,7 @@ import Rocks from 0x179b6b1cb6755e31
 // Contract Deployment:
 // Acct 1 - 0x01cf0e2f2f715450 - w00tcoin.cdc
 // Acct 2 - 0x179b6b1cb6755e31 - rocks.cdc
-// Acct 3 - 0xf3fcd2c1a78f5eee - marketplace.cdc
+// Acct 3 - 0xf3fcd2c1a78f5eee - votey-auction.cdc
 // Acct 4 - 0xe03daebed8ca0615 - onflow/NonFungibleToken.cdc
 
 transaction{
@@ -59,9 +59,16 @@ transaction{
                                    ?? panic("unable to borrow nft receiver reference")
 
         // mint an NFT and deposit it in the receiver's collection
-        self.minterRef.mintNFT(recipient: receiverRef)
+        let amountNFTs = 10
+        var counter = 0
 
-        log("New NFT minted for account 1")
+        while counter < amountNFTs {
+            self.minterRef.mintNFT(recipient: receiverRef)
+            counter = counter + 1
+            
+        }
+
+        log("New NFT(s) minted for account 1")
     }
 }
  

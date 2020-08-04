@@ -1,6 +1,6 @@
 // This script prints the NFTs that account 1 has for sale.
 
-import Marketplace from 0xf3fcd2c1a78f5eee
+import VoteyAuction from 0xf3fcd2c1a78f5eee
 
 // Contract Deployment:
 // Acct 1 - 0x01cf0e2f2f715450 - w00tcoin.cdc
@@ -13,13 +13,21 @@ pub fun main() {
     let account1 = getAccount(0x01cf0e2f2f715450)
 
     // find the public Sale Collection capability
-    let account1SaleRef = account1.getCapability(/public/NFTSale)!
-                                  .borrow<&{Marketplace.SalePublic}>()
-                                  ?? panic("unable to borrow a reference to the sale collection for account 1")
+    let account1AuctionRef = account1.getCapability(/public/NFTAuction)!
+                                  .borrow<&VoteyAuction.AuctionCollection{VoteyAuction.AuctionPublic}>()
+                                  ?? panic("unable to borrow a reference to the Auction collection for account 1")
 
-    // Log the NFTs that are for sale
-    log("Account 1 NFTs for sale")
-    log(account1SaleRef.getIDs())
-    log("Price of NFT 1")
-    log(account1SaleRef.idPrice(tokenID: 1))
+    // Get the IDs from the auction queue
+    let auctionIDs = account1AuctionRef.getQueueIDs()
+
+    // Log the NFTs that are for Auction
+    log("Account 1 NFTs for Auction")
+    log(auctionIDs)
+
+    for id in auctionIDs {
+        log("Token ID:")
+        log(id)
+        log("Start Price:")
+        log(account1AuctionRef.queueIDPrice(tokenID: id))
+    }
 }

@@ -17,6 +17,8 @@ transaction {
     // public Vault reciever references for both accounts
     let acct1Ref: &AnyResource{FungibleToken.Receiver}
     let acct2Ref: &AnyResource{FungibleToken.Receiver}
+    let acct3Ref: &AnyResource{FungibleToken.Receiver}
+    let acct4Ref: &AnyResource{FungibleToken.Receiver}
 
     // reference to the W00tCoin administrator
     let adminRef: &W00tCoin.Administrator
@@ -25,6 +27,8 @@ transaction {
     prepare(acct: AuthAccount) {
         // get the public object for Account 2
         let account2 = getAccount(0x179b6b1cb6755e31)
+        let account3 = getAccount(0xf3fcd2c1a78f5eee)
+        let account4 = getAccount(0xe03daebed8ca0615)
 
         // retreive the public vault references for both accounts
         self.acct1Ref = acct.getCapability(/public/W00tCoinReceiver)!
@@ -35,12 +39,20 @@ transaction {
                         .borrow<&{FungibleToken.Receiver}>()
                         ?? panic("Could not borrow Account 2's vault reference")
         
+        self.acct3Ref = account3.getCapability(/public/W00tCoinReceiver)!
+                        .borrow<&{FungibleToken.Receiver}>()
+                        ?? panic("Could not borrow Account 3's vault reference")
+
+        self.acct4Ref = account4.getCapability(/public/W00tCoinReceiver)!
+                        .borrow<&{FungibleToken.Receiver}>()
+                        ?? panic("Could not borrow Account 4's vault reference")
+        
         // borrow a reference to the Administrator resource in Account 2
         self.adminRef = acct.borrow<&W00tCoin.Administrator>(from: /storage/W00tCoinAdmin)
                             ?? panic("Signer is not the token admin!")
         
         // create a new minter and store it in account storage
-        let minter <-self.adminRef.createNewMinter(allowedAmount: UFix64(100))
+        let minter <-self.adminRef.createNewMinter(allowedAmount: UFix64(1000))
         acct.save<@W00tCoin.Minter>(<-minter, to: /storage/W00tCoinMinter)
 
         // create a capability for the new minter
@@ -56,10 +68,12 @@ transaction {
 
     execute {
         // mint tokens for both accounts
-        self.acct1Ref.deposit(from: <-self.minterRef.mintTokens(amount: UFix64(40)))
-        self.acct2Ref.deposit(from: <-self.minterRef.mintTokens(amount: UFix64(20)))
+        self.acct1Ref.deposit(from: <-self.minterRef.mintTokens(amount: UFix64(100)))
+        self.acct2Ref.deposit(from: <-self.minterRef.mintTokens(amount: UFix64(200)))
+        self.acct3Ref.deposit(from: <-self.minterRef.mintTokens(amount: UFix64(200)))
+        self.acct4Ref.deposit(from: <-self.minterRef.mintTokens(amount: UFix64(200)))
 
-        log("Minted new W00tCoins for accounts 1 and 2")
+        log("Minted new W00tCoins for all accounts")
     }
 }
  

@@ -181,7 +181,7 @@ pub contract W00tCoin: FungibleToken {
 
     // The init function initializes the fields for the W00tCoin contract.
     init() {
-        self.totalSupply = 1000.0
+        self.totalSupply = 0.0
 
         // Create the Vault with the total supply of tokens and save it in storage
         let vault <-create Vault(balance: self.totalSupply)

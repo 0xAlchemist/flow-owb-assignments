@@ -119,10 +119,9 @@ pub contract VoteyAuction {
         access(contract) let bidVault: @FungibleToken.Vault
 
         init(
-            ownerVault: &AnyResource{FungibleToken.Receiver},
             bidVault: @FungibleToken.Vault,
-            tempFTVault: &AnyResource{FungibleToken.Receiver},
-            tempNFTVault: &AnyResource{NonFungibleToken.Receiver}
+            ownerVault: &AnyResource{FungibleToken.Receiver},
+            ownerNFTCollection: &AnyResource{NonFungibleToken.Receiver}
         ) {
             self.id = UInt64(VoteyAuction.activeAuctions.values.length)
             self.currentAuctionItem <- []
@@ -132,8 +131,8 @@ pub contract VoteyAuction {
             self.lastCheckedBlock = self.auctionStartBlock
             self.auctionLengthInBlocks = UInt64(3600)
             self.blocksRemainingInAuction = self.auctionLengthInBlocks
-            self.recipientFTReceiverRef = tempFTVault
-            self.recipientNFTReceiverRef = tempNFTVault
+            self.recipientFTReceiverRef = ownerVault
+            self.recipientNFTReceiverRef = ownerNFTCollection
             self.auctionQueue <- {}
             self.auctionQueuePrices = {}
             self.auctionQueueVotes = {}
@@ -306,6 +305,8 @@ pub contract VoteyAuction {
 
         // updateAuction updates the auction state every time it receives a new block count
         access(contract) fun updateAuction(currentBlockHeight: UInt64) {
+
+            log("updating auction...")
             
             // if the current block was not already checked
             if currentBlockHeight != self.lastCheckedBlock {
@@ -397,11 +398,11 @@ pub contract VoteyAuction {
             let id = token.id
 
             // store the price in the price array
-            self.auctionQueuePrices[id] = startPrice
+            self.changeStartPrice(tokenID: id, newPrice: startPrice)
 
             self.auctionQueueVotes[id] = UInt64(0)
             
-            // put the NFT into the forSale dictionary
+            // put the NFT into the auctionQueue dictionary
             let oldToken <- self.auctionQueue[id] <- token
             destroy oldToken
 
@@ -457,17 +458,15 @@ pub contract VoteyAuction {
 
     // createAuctionCollection returns a new collection resource to the caller
     pub fun createAuctionCollection(
-        ownerVault: &AnyResource{FungibleToken.Receiver},
         bidVault: @FungibleToken.Vault,
-        tempFTReceiverRef: &AnyResource{FungibleToken.Receiver},
-        tempNFTReceiverRef: &AnyResource{NonFungibleToken.Receiver}
+        ownerVault: &AnyResource{FungibleToken.Receiver},
+        ownerNFTCollection: &AnyResource{NonFungibleToken.Receiver}
     ): @AuctionCollection {
 
         let auctionCollection <- create AuctionCollection(
+            bidVault: <-bidVault,
             ownerVault: ownerVault, 
-            bidVault: <-bidVault, 
-            tempFTVault: tempFTReceiverRef, 
-            tempNFTVault: tempNFTReceiverRef
+            ownerNFTCollection: ownerNFTCollection
         )
 
         return <- auctionCollection
