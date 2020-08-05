@@ -8,6 +8,8 @@ import NonFungibleToken from 0xe03daebed8ca0615
 import W00tCoin from 0x01cf0e2f2f715450
 import Rocks from 0x179b6b1cb6755e31
 
+// somefink
+
 // Contract Deployment:
 // Acct 1 - 0x01cf0e2f2f715450 - w00tcoin.cdc
 // Acct 2 - 0x179b6b1cb6755e31 - rocks.cdc
