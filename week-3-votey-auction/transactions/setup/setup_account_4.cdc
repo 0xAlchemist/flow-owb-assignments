@@ -5,13 +5,13 @@
 
 import FungibleToken from 0xee82856bf20e2aa6
 import NonFungibleToken from 0xe03daebed8ca0615
-import W00tCoin from 0x01cf0e2f2f715450
+import DemoToken from 0x01cf0e2f2f715450
 import Rocks from 0x179b6b1cb6755e31
 
 // somefink
 
 // Contract Deployment:
-// Acct 1 - 0x01cf0e2f2f715450 - w00tcoin.cdc
+// Acct 1 - 0x01cf0e2f2f715450 - demo-token.cdc
 // Acct 2 - 0x179b6b1cb6755e31 - rocks.cdc
 // Acct 3 - 0xf3fcd2c1a78f5eee - votey-auction.cdc
 // Acct 4 - 0xe03daebed8ca0615 - onflow/NonFungibleToken.cdc
@@ -21,21 +21,21 @@ transaction{
     prepare(acct: AuthAccount) {
         
         // create a new empty Vault resource
-        let vaultA <- W00tCoin.createEmptyVault()
+        let vaultA <- DemoToken.createEmptyVault()
 
         // store the vault in the accout storage
-        acct.save<@FungibleToken.Vault>(<-vaultA, to: /storage/W00tCoinVault)
+        acct.save<@FungibleToken.Vault>(<-vaultA, to: /storage/DemoTokenVault)
 
         // create a public Receiver capability to the Vault
-        acct.link<&W00tCoin.Vault{FungibleToken.Receiver}>(
-            /public/W00tCoinReceiver,
-            target: /storage/W00tCoinVault
+        acct.link<&DemoToken.Vault{FungibleToken.Receiver}>(
+            /public/DemoTokenReceiver,
+            target: /storage/DemoTokenVault
         )
 
         // create a public Balance capability to the Vault
-        acct.link<&W00tCoin.Vault{FungibleToken.Balance}>(
-            /public/W00tCoinBalance,
-            target: /storage/W00tCoinVault
+        acct.link<&DemoToken.Vault{FungibleToken.Balance}>(
+            /public/DemoTokenBalance,
+            target: /storage/DemoTokenVault
         )
 
         log("Created a Vault and published the references")

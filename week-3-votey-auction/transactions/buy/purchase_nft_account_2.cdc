@@ -8,7 +8,7 @@ import NonFungibleToken from 0xe03daebed8ca0615
 import Marketplace from 0xf3fcd2c1a78f5eee
 
 // Contract Deployment:
-// Acct 1 - 0x01cf0e2f2f715450 - w00tcoin.cdc
+// Acct 1 - 0x01cf0e2f2f715450 - demo-token.cdc
 // Acct 2 - 0x179b6b1cb6755e31 - rocks.cdc
 // Acct 3 - 0xf3fcd2c1a78f5eee - marketplace.cdc
 // Acct 4 - 0xe03daebed8ca0615 - onflow/NonFungibleToken.cdc
@@ -25,7 +25,7 @@ transaction {
     prepare(account: AuthAccount) {
         // get the references to the buyer's Vault and NFT Collection receiver
         self.collectionRef = account.borrow<&AnyResource{NonFungibleToken.Receiver}>(from: /storage/RockCollection)!
-        let vaultRef = account.borrow<&FungibleToken.Vault>(from: /storage/W00tCoinVault)
+        let vaultRef = account.borrow<&FungibleToken.Vault>(from: /storage/DemoTokenVault)
             ?? panic("Could not borrow owner's Vault reference")
 
         // withdraw tokens from the buyer's Vault

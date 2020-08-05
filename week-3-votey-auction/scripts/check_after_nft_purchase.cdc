@@ -1,15 +1,15 @@
 // This script checks that the accounts are set up correctly for the marketplace tutorial.
 //
-// Account 0x01: W00tCoin Vault Balance = 1050, No NFTs
-// Account 0x02: W00tCoin Vault Balance = 10, NFT.id = 1
+// Account 0x01: DemoToken Vault Balance = 1050, No NFTs
+// Account 0x02: DemoToken Vault Balance = 10, NFT.id = 1
 
 import FungibleToken from 0xee82856bf20e2aa6
 import NonFungibleToken from 0xe03daebed8ca0615
-import W00tCoin from 0x01cf0e2f2f715450
+import DemoToken from 0x01cf0e2f2f715450
 import Rocks from 0x179b6b1cb6755e31
 
 // Contract Deployment:
-// Acct 1 - 0x01cf0e2f2f715450 - w00tcoin.cdc
+// Acct 1 - 0x01cf0e2f2f715450 - demo-token.cdc
 // Acct 2 - 0x179b6b1cb6755e31 - rocks.cdc
 // Acct 3 - 0xf3fcd2c1a78f5eee - marketplace.cdc
 // Acct 4 - 0xe03daebed8ca0615 - onflow/NonFungibleToken.cdc
@@ -22,22 +22,22 @@ pub fun main() {
     // get the reference to the account's receivers
     // by getting their public capability
     // and borrowing a reference from the capability
-    let account1ReceiverRef = account1.getCapability(/public/W00tCoinBalance)!
-                                      .borrow<&W00tCoin.Vault{FungibleToken.Balance}>()
+    let account1ReceiverRef = account1.getCapability(/public/DemoTokenBalance)!
+                                      .borrow<&DemoToken.Vault{FungibleToken.Balance}>()
                                       ?? panic("could not borrow the vault balance reference for account 1")
     
-    let account2ReceiverRef = account2.getCapability(/public/W00tCoinBalance)!
-                                      .borrow<&W00tCoin.Vault{FungibleToken.Balance}>()
+    let account2ReceiverRef = account2.getCapability(/public/DemoTokenBalance)!
+                                      .borrow<&DemoToken.Vault{FungibleToken.Balance}>()
                                       ?? panic("could not borrow the vault balance reference for account 2")
     
     // log the Vault balance of both accounts
     // and ensure they are the correct numbers
     // Account 1 should have 40
     // Account 2 should have 20
-    log("Account 1 W00tCoin Balance:")
+    log("Account 1 DemoToken Balance:")
     log(account1ReceiverRef.balance)
     
-    log("Account 2 W00tCoin Balance:")
+    log("Account 2 DemoToken Balance:")
     log(account2ReceiverRef.balance)
 
 

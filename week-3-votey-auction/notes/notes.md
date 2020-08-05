@@ -2,10 +2,10 @@
 
 ## Setup - Done
 
-1. Account 1 has 100 w00tCoin and 10 NFTs
-2. Account 2 has 200 w00tCoin and 0 NFTs
-3. Account 3 has 200 w00tCoin and 0 NFTs
-4. Account 4 has 200 w00tCoin and 0 NFTs
+1. Account 1 has 100 DemoToken and 10 NFTs
+2. Account 2 has 200 DemoToken and 0 NFTs
+3. Account 3 has 200 DemoToken and 0 NFTs
+4. Account 4 has 200 DemoToken and 0 NFTs
 
 ## Auction
 

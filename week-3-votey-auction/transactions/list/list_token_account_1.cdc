@@ -7,11 +7,11 @@
 
 import NonFungibleToken from 0xe03daebed8ca0615
 import FungibleToken from 0xee82856bf20e2aa6
-import W00tCoin from 0x01cf0e2f2f715450
+import DemoToken from 0x01cf0e2f2f715450
 import VoteyAuction from 0xf3fcd2c1a78f5eee
 
 // Contract Deployment:
-// Acct 1 - 0x01cf0e2f2f715450 - w00tcoin.cdc
+// Acct 1 - 0x01cf0e2f2f715450 - demo-token.cdc
 // Acct 2 - 0x179b6b1cb6755e31 - rocks.cdc
 // Acct 3 - 0xf3fcd2c1a78f5eee - votey-auction.cdc
 // Acct 4 - 0xe03daebed8ca0615 - onflow/NonFungibleToken.cdc
@@ -19,10 +19,10 @@ import VoteyAuction from 0xf3fcd2c1a78f5eee
 transaction {
     prepare(account: AuthAccount) {
 
-        let bidVault <- W00tCoin.createEmptyVault()
+        let bidVault <- DemoToken.createEmptyVault()
 
         // borrow a reference to the signer's Vault
-        let receiver = account.borrow<&{FungibleToken.Receiver}>(from: /storage/W00tCoinVault)
+        let receiver = account.borrow<&{FungibleToken.Receiver}>(from: /storage/DemoTokenVault)
                               ?? panic("Unable to borrow a reference to the owner's vault")
 
         // borrow a reference to the NFT collection in storage
@@ -58,7 +58,7 @@ transaction {
             target: /storage/NFTAuction
         )
 
-        log("Auction created for account 1. Listed NFT ids[1-10] for start price of 10 w00tCoins each.")
+        log("Auction created for account 1. Listed NFT ids[1-10] for start price of 10 DemoTokens each.")
     }
 }
  
