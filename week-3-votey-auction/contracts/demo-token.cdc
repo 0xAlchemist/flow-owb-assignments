@@ -1,19 +1,19 @@
-// W00tCoin is a fungible token used for testing
+// DemoToken is a fungible token used for testing
 // marketplace purchases
 
 // Import the Flow FungibleToken interface
 import FungibleToken from 0xee82856bf20e2aa6
 
 // Contract Deployment:
-// Acct 1 - 0x01cf0e2f2f715450 - w00tcoin.cdc
+// Acct 1 - 0x01cf0e2f2f715450 - demo-token.cdc
 // Acct 2 - 0x179b6b1cb6755e31 - rocks.cdc
 // Acct 3 - 0xf3fcd2c1a78f5eee - marketplace.cdc
 // Acct 4 - 0xe03daebed8ca0615 - onflow/NonFungibleToken.cdc
 //
 
-pub contract W00tCoin: FungibleToken {
+pub contract DemoToken: FungibleToken {
 
-    // Total supply of all W00tCoins in existence.
+    // Total supply of all DemoTokens in existence.
     pub var totalSupply: UFix64
 
     // Event that is emitted when the contract is created
@@ -84,7 +84,7 @@ pub contract W00tCoin: FungibleToken {
         // been consumed and therefore can be destroyed.
         //
         pub fun deposit(from: @FungibleToken.Vault) {
-            let vault <- from as! @W00tCoin.Vault
+            let vault <- from as! @DemoToken.Vault
             self.balance = self.balance + vault.balance
             emit TokensDeposited(amount: vault.balance, to: self.owner?.address)
             vault.balance = 0.0
@@ -92,7 +92,7 @@ pub contract W00tCoin: FungibleToken {
         }
 
         destroy() {
-            W00tCoin.totalSupply = W00tCoin.totalSupply - self.balance
+            DemoToken.totalSupply = DemoToken.totalSupply - self.balance
         }
     }
 
@@ -141,12 +141,12 @@ pub contract W00tCoin: FungibleToken {
         // Function that mints new tokens, adds them to the total supply,
         // and returns them to the calling context
         //
-        pub fun mintTokens(amount: UFix64): @W00tCoin.Vault {
+        pub fun mintTokens(amount: UFix64): @DemoToken.Vault {
             pre {
                 amount > UFix64(0): "Amount minted must be greater than zero"
                 amount <= self.allowedAmount: "Amount minted must be less than the allowed amount"
             }
-            W00tCoin.totalSupply = W00tCoin.totalSupply + amount
+            DemoToken.totalSupply = DemoToken.totalSupply + amount
             self.allowedAmount = self.allowedAmount - amount
             emit TokensMinted(amount: amount)
             return <-create Vault(balance: amount)
@@ -172,38 +172,38 @@ pub contract W00tCoin: FungibleToken {
         // the totalSupply in the Vault destructor
         //
         pub fun burnTokens(from: @FungibleToken.Vault) {
-            let vault <- from as! @W00tCoin.Vault
+            let vault <- from as! @DemoToken.Vault
             let amount = vault.balance
             destroy vault
             emit TokensBurned(amount: amount)
         }
     }
 
-    // The init function initializes the fields for the W00tCoin contract.
+    // The init function initializes the fields for the DemoToken contract.
     init() {
         self.totalSupply = 0.0
 
         // Create the Vault with the total supply of tokens and save it in storage
         let vault <-create Vault(balance: self.totalSupply)
-        self.account.save(<-vault, to: /storage/W00tCoinVault)
+        self.account.save(<-vault, to: /storage/DemoTokenVault)
 
         // Create a public capability to the stored Vault that only exposes
         // the 'deposit' method through the 'Receiver' interface
         //
         self.account.link<&{FungibleToken.Receiver}>(
-            /public/W00tCoinReceiver,
-            target: /storage/W00tCoinVault
+            /public/DemoTokenReceiver,
+            target: /storage/DemoTokenVault
         )
 
         // Create a public capability to the stored Vault that only exposes
         // the 'balance' field through the 'Balance' interface
-        self.account.link<&W00tCoin.Vault{FungibleToken.Balance}>(
-            /public/W00tCoinBalance,
-            target: /storage/W00tCoinVault
+        self.account.link<&DemoToken.Vault{FungibleToken.Balance}>(
+            /public/DemoTokenBalance,
+            target: /storage/DemoTokenVault
         )
 
         let admin <-create Administrator()
-        self.account.save(<-admin, to: /storage/W00tCoinAdmin)
+        self.account.save(<-admin, to: /storage/DemoTokenAdmin)
 
         // Emit an event that shows that the contract was initialized
         emit TokensInitialized(initialSupply: self.totalSupply)
