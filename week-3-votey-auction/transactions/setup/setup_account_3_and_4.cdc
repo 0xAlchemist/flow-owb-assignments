@@ -46,7 +46,7 @@ transaction{
         acct.save<@NonFungibleToken.Collection>(<-NFTCollecton, to: /storage/RockCollection)
 
         // create a public CollectionPublic capability to the Rock Collection
-        acct.link<&NonFungibleToken.Collection{NonFungibleToken.CollectionPublic}>(
+        acct.link<&{Rocks.PublicCollectionMethods}>(
             /public/RockCollection,
             target: /storage/RockCollection
         )
@@ -54,7 +54,7 @@ transaction{
 
         log("Created a Rock Collection and published the references")
 
-        log("Account 3 is ready to Rock and w00t!")        
+        log("Account 3 is ready to Rock!")        
     }
 }
  

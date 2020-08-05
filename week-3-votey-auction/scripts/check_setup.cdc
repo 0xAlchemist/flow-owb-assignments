@@ -8,6 +8,7 @@
 import FungibleToken from 0xee82856bf20e2aa6
 import NonFungibleToken from 0xe03daebed8ca0615
 import DemoToken from 0x01cf0e2f2f715450
+import Rocks from 0x179b6b1cb6755e31
 
 // Contract Deployment:
 // Acct 1 - 0x01cf0e2f2f715450 - demo-token.cdc
@@ -43,7 +44,7 @@ pub fun main() {
     
     // log the Vault balance of both accounts
     // and ensure they are the correct numbers
-    // Account 1 should have 400
+    // Account 1 should have 100
     // Account 2 should have 200
     // Account 3 should have 200
     // Account 4 should have 200
@@ -73,13 +74,13 @@ pub fun main() {
     let account4NFTCapability = account4.getCapability(/public/RockCollection)!
 
     // borrow references from the capabilities
-    let account1NFTRef = account1NFTCapability.borrow<&{NonFungibleToken.CollectionPublic}>()
+    let account1NFTRef = account1NFTCapability.borrow<&{Rocks.PublicCollectionMethods}>()
                         ?? panic("unable to borrow a reference to NFT collection for Account 1")
-    let account2NFTRef = account2NFTCapability.borrow<&{NonFungibleToken.CollectionPublic}>()
+    let account2NFTRef = account2NFTCapability.borrow<&{Rocks.PublicCollectionMethods}>()
                         ?? panic("unable to borrow a reference to NFT collection for Account 2")
-    let account3NFTRef = account3NFTCapability.borrow<&{NonFungibleToken.CollectionPublic}>()
+    let account3NFTRef = account3NFTCapability.borrow<&{Rocks.PublicCollectionMethods}>()
                         ?? panic("unable to borrow a reference to NFT collection for Account 3")
-    let account4NFTRef = account4NFTCapability.borrow<&{NonFungibleToken.CollectionPublic}>()
+    let account4NFTRef = account4NFTCapability.borrow<&{Rocks.PublicCollectionMethods}>()
                         ?? panic("unable to borrow a reference to NFT collection for Account 4")
 
     // print both collections as arrays of ids

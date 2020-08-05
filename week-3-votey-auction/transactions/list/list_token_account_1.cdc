@@ -32,9 +32,11 @@ transaction {
         // create a new sale object     
         // initializing it with the reference to the owner's Vault
         let auction <- VoteyAuction.createAuctionCollection(
-            bidVault: <-bidVault,
+            minimumBidIncrement: UFix64(5),
+            auctionLengthInBlocks: UInt64(30),
             ownerVault: receiver,
-            ownerNFTCollection: collectionRef
+            ownerNFTCollection: collectionRef,
+            bidVault: <-bidVault
         )
 
         let collectionIDs = collectionRef.getIDs()
@@ -45,7 +47,7 @@ transaction {
             let NFT <- collectionRef.withdraw(withdrawID: id)
 
             // list the token for sale by moving it into the sale resource
-            auction.addTokenToQueue(token: <-NFT, startPrice: UFix64(10))
+            auction.addTokenToAuctionQueue(token: <-NFT, startPrice: UFix64(10))
         }
 
         // store the sale resource in the account for storage

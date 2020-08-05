@@ -18,16 +18,9 @@ pub fun main() {
                                   ?? panic("unable to borrow a reference to the Auction collection for account 1")
 
     // Get the IDs from the auction queue
-    let auctionIDs = account1AuctionRef.getQueueIDs()
+    let prices = account1AuctionRef.getAuctionQueuePrices()
 
-    // Log the NFTs that are for Auction
-    log("Account 1 NFTs for Auction")
-    log(auctionIDs)
-
-    for id in auctionIDs {
-        log("Token ID:")
-        log(id)
-        log("Start Price:")
-        log(account1AuctionRef.queueIDPrice(tokenID: id))
-    }
+    // Log the NFTs that are in the auction queue with their start prices
+    log("Account 1 NFTs in the auction queue")
+    log(prices)
 }

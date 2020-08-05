@@ -54,8 +54,9 @@ transaction{
 
         // get the collection reference for the receiver
         // getting the public capability and borrowing the reference from it
-        let receiverRef = recipient.getCapability(/public/RockCollection)!
-                                   .borrow<&{NonFungibleToken.CollectionPublic}>()
+        let receiverCap = recipient.getCapability(/public/RockCollection)!
+
+        let receiverRef = receiverCap.borrow<&{Rocks.PublicCollectionMethods}>()
                                    ?? panic("unable to borrow nft receiver reference")
 
         // mint an NFT and deposit it in the receiver's collection
